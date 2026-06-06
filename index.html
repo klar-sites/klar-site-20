@@ -279,6 +279,7 @@
         padding: 14px 16px;
         transition: var(--todo-rx7-transition);
         animation: todo-rx7-slide-in 0.3s ease-out;
+        user-select: none;
       }
 
       @keyframes todo-rx7-slide-in {
@@ -301,6 +302,18 @@
       .todo-rx7-item--done .todo-rx7-item-text {
         text-decoration: line-through;
         color: var(--todo-rx7-text-done);
+      }
+
+      .todo-rx7-item--dragging {
+        opacity: 0.5;
+        border-color: var(--todo-rx7-primary);
+        box-shadow: 0 0 0 2px var(--todo-rx7-primary-glow);
+      }
+
+      .todo-rx7-item--drag-over {
+        border-color: var(--todo-rx7-primary);
+        background: var(--todo-rx7-surface-hover);
+        box-shadow: 0 0 0 2px var(--todo-rx7-primary-glow);
       }
 
       .todo-rx7-checkbox {
@@ -345,6 +358,37 @@
         font-size: 15px;
         line-height: 1.4;
         transition: var(--todo-rx7-transition);
+      }
+
+      .todo-rx7-drag-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        color: var(--todo-rx7-text-muted);
+        padding: 4px 2px;
+        border-radius: 6px;
+        transition: var(--todo-rx7-transition);
+        flex-shrink: 0;
+        opacity: 0;
+      }
+
+      .todo-rx7-drag-handle:hover {
+        color: var(--todo-rx7-text);
+        background: rgba(255,255,255,0.05);
+      }
+
+      .todo-rx7-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .todo-rx7-item:hover .todo-rx7-drag-handle {
+        opacity: 1;
+      }
+
+      .todo-rx7-drag-handle svg {
+        width: 16px;
+        height: 16px;
       }
 
       .todo-rx7-delete-btn {
@@ -415,6 +459,85 @@
         transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
+      /* Sort controls */
+      .todo-rx7-sort-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding: 0 4px;
+      }
+
+      .todo-rx7-sort-label {
+        font-size: 13px;
+        color: var(--todo-rx7-text-muted);
+        font-weight: 500;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .todo-rx7-sort-label svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
+      }
+
+      .todo-rx7-sort-options {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .todo-rx7-sort-btn {
+        padding: 5px 12px;
+        border: 1px solid var(--todo-rx7-border);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--todo-rx7-text-muted);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--todo-rx7-transition);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+      }
+
+      .todo-rx7-sort-btn:hover {
+        color: var(--todo-rx7-text);
+        border-color: rgba(245, 191, 79, 0.3);
+        background: rgba(245, 191, 79, 0.05);
+      }
+
+      .todo-rx7-sort-btn--active {
+        color: var(--todo-rx7-primary);
+        border-color: var(--todo-rx7-primary);
+        background: rgba(245, 191, 79, 0.08);
+      }
+
+      .todo-rx7-sort-btn--active:hover {
+        color: var(--todo-rx7-primary-hover);
+        border-color: var(--todo-rx7-primary-hover);
+        background: rgba(245, 191, 79, 0.12);
+      }
+
+      .todo-rx7-sort-arrow {
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .todo-rx7-sort-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--todo-rx7-border);
+        margin: 0 4px;
+        flex-shrink: 0;
+      }
+
       @media (max-width: 480px) {
         .todo-rx7-app-container {
           padding: 24px 18px;
@@ -431,6 +554,16 @@
         .todo-rx7-delete-btn {
           opacity: 1;
         }
+
+        .todo-rx7-drag-handle {
+          opacity: 1;
+        }
+
+        .todo-rx7-sort-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        }
       }
     </style>
   </head>
@@ -443,7 +576,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel" data-type="module">
-      const { useState, useEffect, useRef } = React;
+      const { useState, useEffect, useRef, useCallback } = React;
 
     const STORAGE_KEY = 'todo-rx7-items-v2';
 
@@ -479,11 +612,40 @@
       );
     }
 
+    function DragHandleIcon() {
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <circle cx="9" cy="6" r="1.5" />
+          <circle cx="15" cy="6" r="1.5" />
+          <circle cx="9" cy="12" r="1.5" />
+          <circle cx="15" cy="12" r="1.5" />
+          <circle cx="9" cy="18" r="1.5" />
+          <circle cx="15" cy="18" r="1.5" />
+        </svg>
+      );
+    }
+
+    function SortIcon() {
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="4" y1="6" x2="16" y2="6" />
+          <line x1="4" y1="12" x2="13" y2="12" />
+          <line x1="4" y1="18" x2="10" y2="18" />
+        </svg>
+      );
+    }
+
     function TodoApp() {
       const [todos, setTodos] = useState(loadTodos);
       const [inputVal, setInputVal] = useState('');
       const [filter, setFilter] = useState('all');
+      const [sortBy, setSortBy] = useState('manual');
+      const [sortDir, setSortDir] = useState('asc');
       const inputRef = useRef(null);
+      const dragItemRef = useRef(null);
+      const dragOverItemRef = useRef(null);
+      const [dragItemId, setDragItemId] = useState(null);
+      const [dragOverId, setDragOverId] = useState(null);
 
       useEffect(() => {
         saveTodos(todos);
@@ -497,7 +659,7 @@
         const text = inputVal.trim();
         if (!text) return;
         setTodos(prev => [
-          { id: Date.now(), text, done: false },
+          { id: Date.now(), text, done: false, createdAt: Date.now() },
           ...prev
         ]);
         setInputVal('');
@@ -520,15 +682,149 @@
         if (e.key === 'Enter') addTodo();
       };
 
-      const filtered = todos.filter(t => {
-        if (filter === 'active') return !t.done;
-        if (filter === 'done') return t.done;
-        return true;
-      });
+      // Drag and drop handlers
+      const handleDragStart = (e, id, index) => {
+        dragItemRef.current = index;
+        setDragItemId(id);
+        e.dataTransfer.effectAllowed = 'move';
+        // Required for Firefox
+        e.dataTransfer.setData('text/plain', '');
+      };
+
+      const handleDragEnter = (e, id, index) => {
+        e.preventDefault();
+        dragOverItemRef.current = index;
+        setDragOverId(id);
+      };
+
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      };
+
+      const handleDragLeave = (e, id) => {
+        // Only clear if we're leaving the item entirely
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          if (dragOverId === id) {
+            setDragOverId(null);
+          }
+        }
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        if (dragItemRef.current === null || dragOverItemRef.current === null) return;
+        if (dragItemRef.current === dragOverItemRef.current) {
+          setDragItemId(null);
+          setDragOverId(null);
+          return;
+        }
+
+        // When using sorted views, we need to reorder in the actual todos array
+        const displayedFiltered = getFilteredTodos();
+        const sortedFiltered = getSortedTodos(displayedFiltered);
+
+        const draggedItem = sortedFiltered[dragItemRef.current];
+        const targetItem = sortedFiltered[dragOverItemRef.current];
+
+        if (!draggedItem || !targetItem) {
+          setDragItemId(null);
+          setDragOverId(null);
+          return;
+        }
+
+        setTodos(prev => {
+          const newTodos = [...prev];
+          const fromIndex = newTodos.findIndex(t => t.id === draggedItem.id);
+          const toIndex = newTodos.findIndex(t => t.id === targetItem.id);
+          const [removed] = newTodos.splice(fromIndex, 1);
+          newTodos.splice(toIndex, 0, removed);
+          return newTodos;
+        });
+
+        // Reset to manual sort after drag reorder
+        setSortBy('manual');
+        setDragItemId(null);
+        setDragOverId(null);
+        dragItemRef.current = null;
+        dragOverItemRef.current = null;
+      };
+
+      const handleDragEnd = () => {
+        setDragItemId(null);
+        setDragOverId(null);
+        dragItemRef.current = null;
+        dragOverItemRef.current = null;
+      };
+
+      // Move item up or down (for mobile / keyboard)
+      const moveItem = (index, direction) => {
+        const sortedFiltered = getSortedTodos(getFilteredTodos());
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= sortedFiltered.length) return;
+
+        const item = sortedFiltered[index];
+        const targetItem = sortedFiltered[newIndex];
+
+        setTodos(prev => {
+          const newTodos = [...prev];
+          const fromIdx = newTodos.findIndex(t => t.id === item.id);
+          const toIdx = newTodos.findIndex(t => t.id === targetItem.id);
+          const [removed] = newTodos.splice(fromIdx, 1);
+          newTodos.splice(toIdx, 0, removed);
+          return newTodos;
+        });
+        setSortBy('manual');
+      };
+
+      const handleSort = (type) => {
+        if (sortBy === type) {
+          // Toggle direction
+          setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+          setSortBy(type);
+          setSortDir('asc');
+        }
+      };
+
+      const getFilteredTodos = () => {
+        return todos.filter(t => {
+          if (filter === 'active') return !t.done;
+          if (filter === 'done') return t.done;
+          return true;
+        });
+      };
+
+      const getSortedTodos = (filtered) => {
+        if (sortBy === 'manual') return filtered;
+
+        const sorted = [...filtered];
+        const dir = sortDir === 'asc' ? 1 : -1;
+
+        switch (sortBy) {
+          case 'alpha':
+            sorted.sort((a, b) => dir * a.text.localeCompare(b.text));
+            break;
+          case 'status':
+            sorted.sort((a, b) => dir * (Number(a.done) - Number(b.done)));
+            break;
+          case 'date':
+            sorted.sort((a, b) => dir * ((a.createdAt || a.id) - (b.createdAt || b.id)));
+            break;
+          default:
+            break;
+        }
+        return sorted;
+      };
+
+      const filtered = getFilteredTodos();
+      const sortedFiltered = getSortedTodos(filtered);
 
       const doneCount = todos.filter(t => t.done).length;
       const totalCount = todos.length;
       const progress = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
+
+      const sortArrow = sortDir === 'asc' ? '↑' : '↓';
 
       return (
         <div className="todo-rx7-app-container">
@@ -577,6 +873,43 @@
                 ))}
               </div>
 
+              <div className="todo-rx7-sort-row">
+                <span className="todo-rx7-sort-label">
+                  <SortIcon />
+                  Sort:
+                </span>
+                <div className="todo-rx7-sort-options">
+                  <button
+                    className={`todo-rx7-sort-btn ${sortBy === 'manual' ? 'todo-rx7-sort-btn--active' : ''}`}
+                    onClick={() => { setSortBy('manual'); setSortDir('asc'); }}
+                    title="Manual ordering — drag to reorder"
+                  >
+                    ✋ Manual
+                  </button>
+                  <button
+                    className={`todo-rx7-sort-btn ${sortBy === 'alpha' ? 'todo-rx7-sort-btn--active' : ''}`}
+                    onClick={() => handleSort('alpha')}
+                    title="Sort alphabetically"
+                  >
+                    Aa Name {sortBy === 'alpha' && <span className="todo-rx7-sort-arrow">{sortArrow}</span>}
+                  </button>
+                  <button
+                    className={`todo-rx7-sort-btn ${sortBy === 'date' ? 'todo-rx7-sort-btn--active' : ''}`}
+                    onClick={() => handleSort('date')}
+                    title="Sort by creation date"
+                  >
+                    🕐 Date {sortBy === 'date' && <span className="todo-rx7-sort-arrow">{sortArrow}</span>}
+                  </button>
+                  <button
+                    className={`todo-rx7-sort-btn ${sortBy === 'status' ? 'todo-rx7-sort-btn--active' : ''}`}
+                    onClick={() => handleSort('status')}
+                    title="Sort by completion status"
+                  >
+                    ✓ Status {sortBy === 'status' && <span className="todo-rx7-sort-arrow">{sortArrow}</span>}
+                  </button>
+                </div>
+              </div>
+
               <div className="todo-rx7-stats-bar">
                 <span className="todo-rx7-stats-text">
                   <span>{doneCount}</span> of <span>{totalCount}</span> tasks completed
@@ -590,7 +923,7 @@
             </>
           )}
 
-          {filtered.length === 0 ? (
+          {sortedFiltered.length === 0 ? (
             <div className="todo-rx7-empty-state">
               <span className="todo-rx7-empty-state-icon">
                 {filter === 'done' ? '🎯' : filter === 'active' ? '🎉' : '📝'}
@@ -608,11 +941,23 @@
             </div>
           ) : (
             <ul className="todo-rx7-list">
-              {filtered.map(todo => (
+              {sortedFiltered.map((todo, index) => (
                 <li
                   key={todo.id}
-                  className={`todo-rx7-item ${todo.done ? 'todo-rx7-item--done' : ''}`}
+                  className={`todo-rx7-item ${todo.done ? 'todo-rx7-item--done' : ''} ${dragItemId === todo.id ? 'todo-rx7-item--dragging' : ''} ${dragOverId === todo.id && dragItemId !== todo.id ? 'todo-rx7-item--drag-over' : ''}`}
+                  draggable={sortBy === 'manual'}
+                  onDragStart={(e) => handleDragStart(e, todo.id, index)}
+                  onDragEnter={(e) => handleDragEnter(e, todo.id, index)}
+                  onDragOver={handleDragOver}
+                  onDragLeave={(e) => handleDragLeave(e, todo.id)}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
                 >
+                  {sortBy === 'manual' && (
+                    <span className="todo-rx7-drag-handle" title="Drag to reorder">
+                      <DragHandleIcon />
+                    </span>
+                  )}
                   <button
                     className={`todo-rx7-checkbox ${todo.done ? 'todo-rx7-checkbox--checked' : ''}`}
                     onClick={() => toggleTodo(todo.id)}
