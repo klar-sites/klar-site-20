@@ -279,6 +279,21 @@
         padding: 14px 16px;
         transition: var(--todo-rx7-transition);
         animation: todo-rx7-slide-in 0.3s ease-out;
+        cursor: grab;
+        user-select: none;
+      }
+
+      .todo-rx7-item:active {
+        cursor: grabbing;
+      }
+
+      .todo-rx7-item--dragging {
+        opacity: 0.4;
+      }
+
+      .todo-rx7-item--drag-over {
+        border-color: var(--todo-rx7-primary);
+        box-shadow: 0 0 0 2px var(--todo-rx7-primary-glow);
       }
 
       @keyframes todo-rx7-slide-in {
@@ -443,7 +458,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel" data-type="module">
-      const { useState, useEffect, useRef } = React;
+      const { useState, useEffect, useRef, useCallback } = React;
 
     const STORAGE_KEY = 'todo-rx7-items-v2';
 
@@ -483,6 +498,8 @@
       const [todos, setTodos] = useState(loadTodos);
       const [inputVal, setInputVal] = useState('');
       const [filter, setFilter] = useState('all');
+      const [dragItemId, setDragItemId] = useState(null);
+      const [dragOverItemId, setDragOverItemId] = useState(null);
       const inputRef = useRef(null);
 
       useEffect(() => {
@@ -519,6 +536,62 @@
       const handleKeyDown = (e) => {
         if (e.key === 'Enter') addTodo();
       };
+
+      const handleDragStart = useCallback((e, id) => {
+        setDragItemId(id);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', id.toString());
+        // Make the drag image slightly transparent
+        if (e.currentTarget) {
+          requestAnimationFrame(() => {
+            setDragItemId(id);
+          });
+        }
+      }, []);
+
+      const handleDragOver = useCallback((e, id) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (id !== dragOverItemId) {
+          setDragOverItemId(id);
+        }
+      }, [dragOverItemId]);
+
+      const handleDragLeave = useCallback((e) => {
+        // Only clear if we're actually leaving the element
+        const relatedTarget = e.relatedTarget;
+        if (!e.currentTarget.contains(relatedTarget)) {
+          setDragOverItemId(null);
+        }
+      }, []);
+
+      const handleDrop = useCallback((e, dropId) => {
+        e.preventDefault();
+        if (dragItemId == null || dragItemId === dropId) {
+          setDragItemId(null);
+          setDragOverItemId(null);
+          return;
+        }
+
+        setTodos(prev => {
+          const newTodos = [...prev];
+          const dragIndex = newTodos.findIndex(t => t.id === dragItemId);
+          const dropIndex = newTodos.findIndex(t => t.id === dropId);
+          if (dragIndex === -1 || dropIndex === -1) return prev;
+
+          const [draggedItem] = newTodos.splice(dragIndex, 1);
+          newTodos.splice(dropIndex, 0, draggedItem);
+          return newTodos;
+        });
+
+        setDragItemId(null);
+        setDragOverItemId(null);
+      }, [dragItemId]);
+
+      const handleDragEnd = useCallback(() => {
+        setDragItemId(null);
+        setDragOverItemId(null);
+      }, []);
 
       const filtered = todos.filter(t => {
         if (filter === 'active') return !t.done;
@@ -611,7 +684,13 @@
               {filtered.map(todo => (
                 <li
                   key={todo.id}
-                  className={`todo-rx7-item ${todo.done ? 'todo-rx7-item--done' : ''}`}
+                  className={`todo-rx7-item ${todo.done ? 'todo-rx7-item--done' : ''} ${dragItemId === todo.id ? 'todo-rx7-item--dragging' : ''} ${dragOverItemId === todo.id && dragItemId !== todo.id ? 'todo-rx7-item--drag-over' : ''}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, todo.id)}
+                  onDragOver={(e) => handleDragOver(e, todo.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, todo.id)}
+                  onDragEnd={handleDragEnd}
                 >
                   <button
                     className={`todo-rx7-checkbox ${todo.done ? 'todo-rx7-checkbox--checked' : ''}`}
