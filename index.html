@@ -489,6 +489,10 @@
         saveTodos(todos);
       }, [todos]);
 
+      useEffect(() => {
+        inputRef.current?.focus();
+      }, []);
+
       const addTodo = () => {
         const text = inputVal.trim();
         if (!text) return;
@@ -552,6 +556,7 @@
               value={inputVal}
               onChange={e => setInputVal(e.target.value)}
               onKeyDown={handleKeyDown}
+              autoFocus
             />
             <button className="todo-rx7-add-btn" onClick={addTodo}>
               <span>＋</span> Add Task
