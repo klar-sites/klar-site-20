@@ -1,492 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --todo-rx7-bg: #101012;
-        --todo-rx7-surface: #18181c;
-        --todo-rx7-surface-hover: #1f1f25;
-        --todo-rx7-border: #28282e;
-        --todo-rx7-primary: #5e6ad2;
-        --todo-rx7-primary-glow: rgba(94, 106, 210, 0.2);
-        --todo-rx7-primary-hover: #7b84ec;
-        --todo-rx7-danger: #e5484d;
-        --todo-rx7-danger-glow: rgba(229, 72, 77, 0.15);
-        --todo-rx7-text: #eeeeef;
-        --todo-rx7-text-muted: #6b6b76;
-        --todo-rx7-text-done: #45454d;
-        --todo-rx7-success: #30a46c;
-        --todo-rx7-radius: 8px;
-        --todo-rx7-transition: 0.15s ease;
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --todo-rx7-bg: #0f0f1a;
+      --todo-rx7-surface: #1a1a2e;
+      --todo-rx7-surface-hover: #222240;
+      --todo-rx7-border: #2a2a4a;
+      --todo-rx7-primary: #7c5cfc;
+      --todo-rx7-primary-glow: rgba(124, 92, 252, 0.3);
+      --todo-rx7-primary-hover: #9179ff;
+      --todo-rx7-danger: #ff4d6a;
+      --todo-rx7-danger-glow: rgba(255, 77, 106, 0.2);
+      --todo-rx7-text: #e8e8f0;
+      --todo-rx7-text-muted: #8888a8;
+      --todo-rx7-text-done: #55557a;
+      --todo-rx7-success: #34d399;
+      --todo-rx7-radius: 14px;
+      --todo-rx7-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: var(--todo-rx7-bg);
-        color: var(--todo-rx7-text);
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 60px 20px 40px;
-      }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--todo-rx7-bg);
+      color: var(--todo-rx7-text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
 
-      .todo-rx7-bg-orbs {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
-      }
+    .todo-rx7-bg-orbs {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
 
-      .todo-rx7-bg-orbs::before,
-      .todo-rx7-bg-orbs::after {
-        content: '';
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(150px);
-        opacity: 0.07;
-      }
+    .todo-rx7-bg-orbs::before,
+    .todo-rx7-bg-orbs::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+    }
 
-      .todo-rx7-bg-orbs::before {
-        width: 500px;
-        height: 500px;
-        background: var(--todo-rx7-primary);
-        top: -200px;
-        right: -150px;
-        animation: todo-rx7-float 20s ease-in-out infinite;
-      }
+    .todo-rx7-bg-orbs::before {
+      width: 500px;
+      height: 500px;
+      background: var(--todo-rx7-primary);
+      top: -150px;
+      right: -100px;
+      animation: todo-rx7-float 15s ease-in-out infinite;
+    }
 
-      .todo-rx7-bg-orbs::after {
-        width: 400px;
-        height: 400px;
-        background: #5e6ad2;
-        bottom: -150px;
-        left: -150px;
-        animation: todo-rx7-float 24s ease-in-out infinite reverse;
-      }
+    .todo-rx7-bg-orbs::after {
+      width: 400px;
+      height: 400px;
+      background: #ff4d6a;
+      bottom: -100px;
+      left: -100px;
+      animation: todo-rx7-float 18s ease-in-out infinite reverse;
+    }
 
-      @keyframes todo-rx7-float {
+    @keyframes todo-rx7-float {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(30px, -30px); }
+      66% { transform: translate(-20px, 20px); }
+    }
 
-        0%,
-        100% {
-          transform: translate(0, 0);
-        }
+    #todo-rx7-root {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+    }
 
-        33% {
-          transform: translate(30px, -30px);
-        }
+    .todo-rx7-app-container {
+      background: var(--todo-rx7-surface);
+      border: 1px solid var(--todo-rx7-border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
 
-        66% {
-          transform: translate(-20px, 20px);
-        }
-      }
+    .todo-rx7-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
 
-      #todo-rx7-root {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 560px;
-      }
+    .todo-rx7-header-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+      display: block;
+    }
 
-      .todo-rx7-app-container {
-        background: var(--todo-rx7-surface);
-        border: 1px solid var(--todo-rx7-border);
-        border-radius: 12px;
-        padding: 28px 32px;
-        box-shadow:
-          0 1px 2px rgba(0, 0, 0, 0.3),
-          0 0 0 1px rgba(255, 255, 255, 0.02) inset;
-      }
+    .todo-rx7-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--todo-rx7-primary), var(--todo-rx7-primary-hover), #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
 
-      .todo-rx7-header {
-        text-align: left;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
+    .todo-rx7-header p {
+      color: var(--todo-rx7-text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
 
-      .todo-rx7-header-icon {
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, #5e6ad2, #7b84ec);
-        border-radius: 8px;
-        line-height: 1;
-      }
+    .todo-rx7-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
 
-      .todo-rx7-header-text-wrap {
-        flex: 1;
-      }
+    .todo-rx7-input-field {
+      flex: 1;
+      background: var(--todo-rx7-bg);
+      border: 1.5px solid var(--todo-rx7-border);
+      border-radius: var(--todo-rx7-radius);
+      padding: 14px 18px;
+      font-size: 15px;
+      color: var(--todo-rx7-text);
+      font-family: inherit;
+      outline: none;
+      transition: var(--todo-rx7-transition);
+    }
 
-      .todo-rx7-header h1 {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--todo-rx7-text);
-        background: none;
-        -webkit-background-clip: unset;
-        -webkit-text-fill-color: unset;
-        background-clip: unset;
-        letter-spacing: -0.2px;
-      }
+    .todo-rx7-input-field::placeholder {
+      color: var(--todo-rx7-text-muted);
+    }
 
-      .todo-rx7-header p {
-        color: var(--todo-rx7-text-muted);
-        font-size: 12px;
-        margin-top: 1px;
-        letter-spacing: 0;
-      }
+    .todo-rx7-input-field:focus {
+      border-color: var(--todo-rx7-primary);
+      box-shadow: 0 0 0 3px var(--todo-rx7-primary-glow);
+    }
 
-      .todo-rx7-input-row {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 20px;
-      }
+    .todo-rx7-add-btn {
+      background: var(--todo-rx7-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--todo-rx7-radius);
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--todo-rx7-transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
 
-      .todo-rx7-input-field {
-        flex: 1;
-        background: var(--todo-rx7-bg);
-        border: 1px solid var(--todo-rx7-border);
-        border-radius: var(--todo-rx7-radius);
-        padding: 10px 14px;
-        font-size: 14px;
-        color: var(--todo-rx7-text);
-        font-family: inherit;
-        outline: none;
-        transition: var(--todo-rx7-transition);
-      }
+    .todo-rx7-add-btn:hover {
+      background: var(--todo-rx7-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--todo-rx7-primary-glow);
+    }
 
-      .todo-rx7-input-field::placeholder {
-        color: var(--todo-rx7-text-muted);
-      }
+    .todo-rx7-add-btn:active {
+      transform: translateY(0);
+    }
 
-      .todo-rx7-input-field:focus {
-        border-color: var(--todo-rx7-primary);
-        box-shadow: 0 0 0 2px var(--todo-rx7-primary-glow);
-      }
+    .todo-rx7-filters-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      background: var(--todo-rx7-bg);
+      border-radius: 10px;
+      padding: 4px;
+    }
 
-      .todo-rx7-add-btn {
-        background: var(--todo-rx7-primary);
-        color: #fff;
-        border: none;
-        border-radius: var(--todo-rx7-radius);
-        padding: 10px 18px;
-        font-size: 13px;
-        font-weight: 500;
-        font-family: inherit;
-        cursor: pointer;
-        transition: var(--todo-rx7-transition);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        letter-spacing: -0.1px;
-      }
+    .todo-rx7-filter-btn {
+      flex: 1;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--todo-rx7-text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--todo-rx7-transition);
+    }
 
-      .todo-rx7-add-btn:hover {
-        background: var(--todo-rx7-primary-hover);
-        transform: none;
-        box-shadow: none;
-      }
+    .todo-rx7-filter-btn:hover {
+      color: var(--todo-rx7-text);
+    }
 
-      .todo-rx7-add-btn:active {
-        transform: scale(0.98);
-      }
+    .todo-rx7-filter-btn--active {
+      background: var(--todo-rx7-surface);
+      color: var(--todo-rx7-text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
 
-      .todo-rx7-filters-row {
-        display: flex;
-        gap: 2px;
-        margin-bottom: 16px;
-        background: var(--todo-rx7-bg);
-        border-radius: 6px;
-        padding: 3px;
-        border: 1px solid var(--todo-rx7-border);
-      }
+    .todo-rx7-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
 
-      .todo-rx7-filter-btn {
-        flex: 1;
-        padding: 6px 10px;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--todo-rx7-text-muted);
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--todo-rx7-transition);
-      }
+    .todo-rx7-stats-text {
+      font-size: 13px;
+      color: var(--todo-rx7-text-muted);
+    }
 
-      .todo-rx7-filter-btn:hover {
-        color: var(--todo-rx7-text);
-      }
+    .todo-rx7-stats-text span {
+      color: var(--todo-rx7-primary-hover);
+      font-weight: 600;
+    }
 
-      .todo-rx7-filter-btn--active {
-        background: var(--todo-rx7-surface-hover);
-        color: var(--todo-rx7-text);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      }
+    .todo-rx7-clear-btn {
+      background: none;
+      border: none;
+      color: var(--todo-rx7-danger);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: var(--todo-rx7-transition);
+    }
 
-      .todo-rx7-stats-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        padding: 0 2px;
-      }
+    .todo-rx7-clear-btn:hover {
+      background: var(--todo-rx7-danger-glow);
+    }
 
-      .todo-rx7-stats-text {
-        font-size: 12px;
-        color: var(--todo-rx7-text-muted);
-      }
+    .todo-rx7-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-      .todo-rx7-stats-text span {
-        color: var(--todo-rx7-text);
-        font-weight: 500;
-      }
+    .todo-rx7-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--todo-rx7-bg);
+      border: 1px solid var(--todo-rx7-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      transition: var(--todo-rx7-transition);
+      animation: todo-rx7-slide-in 0.3s ease-out;
+    }
 
-      .todo-rx7-clear-btn {
-        background: none;
-        border: none;
-        color: var(--todo-rx7-text-muted);
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 4px;
-        transition: var(--todo-rx7-transition);
-      }
-
-      .todo-rx7-clear-btn:hover {
-        background: var(--todo-rx7-danger-glow);
-        color: var(--todo-rx7-danger);
-      }
-
-      .todo-rx7-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-        background: var(--todo-rx7-border);
-        border-radius: var(--todo-rx7-radius);
-        overflow: hidden;
-        border: 1px solid var(--todo-rx7-border);
-      }
-
-      .todo-rx7-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: var(--todo-rx7-bg);
-        border: none;
-        border-radius: 0;
-        padding: 10px 14px;
-        transition: var(--todo-rx7-transition);
-        animation: todo-rx7-slide-in 0.2s ease-out;
-      }
-
-      @keyframes todo-rx7-slide-in {
-        from {
-          opacity: 0;
-          transform: translateY(-6px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .todo-rx7-item:hover {
-        border-color: transparent;
-        background: var(--todo-rx7-surface-hover);
-      }
-
-      .todo-rx7-item--done .todo-rx7-item-text {
-        text-decoration: line-through;
-        color: var(--todo-rx7-text-done);
-      }
-
-      .todo-rx7-checkbox {
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
-        border: 1.5px solid var(--todo-rx7-border);
-        cursor: pointer;
-        transition: var(--todo-rx7-transition);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        background: transparent;
-        padding: 0;
-      }
-
-      .todo-rx7-checkbox:hover {
-        border-color: var(--todo-rx7-primary);
-      }
-
-      .todo-rx7-checkbox--checked {
-        background: var(--todo-rx7-primary);
-        border-color: var(--todo-rx7-primary);
-      }
-
-      .todo-rx7-checkbox--checked svg {
-        display: block;
-      }
-
-      .todo-rx7-checkbox svg {
-        display: none;
-        width: 11px;
-        height: 11px;
-        stroke: #fff;
-        stroke-width: 3;
-        fill: none;
-      }
-
-      .todo-rx7-item-text {
-        flex: 1;
-        font-size: 14px;
-        line-height: 1.4;
-        transition: var(--todo-rx7-transition);
-        letter-spacing: -0.1px;
-      }
-
-      .todo-rx7-delete-btn {
-        background: none;
-        border: none;
-        color: var(--todo-rx7-text-muted);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        transition: var(--todo-rx7-transition);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    @keyframes todo-rx7-slide-in {
+      from {
         opacity: 0;
-        flex-shrink: 0;
+        transform: translateY(-10px);
       }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-      .todo-rx7-item:hover .todo-rx7-delete-btn {
+    .todo-rx7-item:hover {
+      border-color: rgba(124, 92, 252, 0.3);
+      background: var(--todo-rx7-surface-hover);
+    }
+
+    .todo-rx7-item--done .todo-rx7-item-text {
+      text-decoration: line-through;
+      color: var(--todo-rx7-text-done);
+    }
+
+    .todo-rx7-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--todo-rx7-border);
+      cursor: pointer;
+      transition: var(--todo-rx7-transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .todo-rx7-checkbox:hover {
+      border-color: var(--todo-rx7-primary);
+    }
+
+    .todo-rx7-checkbox--checked {
+      background: var(--todo-rx7-success);
+      border-color: var(--todo-rx7-success);
+    }
+
+    .todo-rx7-checkbox--checked svg {
+      display: block;
+    }
+
+    .todo-rx7-checkbox svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      stroke: #fff;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .todo-rx7-item-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.4;
+      transition: var(--todo-rx7-transition);
+    }
+
+    .todo-rx7-delete-btn {
+      background: none;
+      border: none;
+      color: var(--todo-rx7-text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      transition: var(--todo-rx7-transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      flex-shrink: 0;
+    }
+
+    .todo-rx7-item:hover .todo-rx7-delete-btn {
+      opacity: 1;
+    }
+
+    .todo-rx7-delete-btn:hover {
+      color: var(--todo-rx7-danger);
+      background: var(--todo-rx7-danger-glow);
+    }
+
+    .todo-rx7-delete-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .todo-rx7-empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--todo-rx7-text-muted);
+    }
+
+    .todo-rx7-empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      display: block;
+      opacity: 0.5;
+    }
+
+    .todo-rx7-empty-state p {
+      font-size: 15px;
+    }
+
+    .todo-rx7-empty-state p:last-child {
+      font-size: 13px;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    .todo-rx7-progress-bar-track {
+      width: 100%;
+      height: 4px;
+      background: var(--todo-rx7-bg);
+      border-radius: 2px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .todo-rx7-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--todo-rx7-primary), var(--todo-rx7-success));
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 480px) {
+      .todo-rx7-app-container {
+        padding: 24px 18px;
+      }
+      .todo-rx7-input-row {
+        flex-direction: column;
+      }
+      .todo-rx7-add-btn {
+        justify-content: center;
+      }
+      .todo-rx7-delete-btn {
         opacity: 1;
       }
+    }
+  </style>
+</head>
+<body>
+  <div class="todo-rx7-bg-orbs"></div>
+  <div id="todo-rx7-root"></div>
 
-      .todo-rx7-delete-btn:hover {
-        color: var(--todo-rx7-danger);
-        background: var(--todo-rx7-danger-glow);
-      }
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-      .todo-rx7-delete-btn svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      .todo-rx7-empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: var(--todo-rx7-text-muted);
-      }
-
-      .todo-rx7-empty-state-icon {
-        font-size: 32px;
-        margin-bottom: 10px;
-        display: block;
-        opacity: 0.4;
-      }
-
-      .todo-rx7-empty-state p {
-        font-size: 13px;
-      }
-
-      .todo-rx7-empty-state p:last-child {
-        font-size: 12px;
-        margin-top: 4px;
-        opacity: 0.6;
-      }
-
-      .todo-rx7-progress-bar-track {
-        width: 100%;
-        height: 2px;
-        background: var(--todo-rx7-border);
-        border-radius: 1px;
-        margin-bottom: 20px;
-        overflow: hidden;
-      }
-
-      .todo-rx7-progress-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--todo-rx7-primary), #7b84ec);
-        border-radius: 1px;
-        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      /* Linear-style keyboard shortcut hints */
-      .todo-rx7-kbd-hint {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-left: auto;
-      }
-
-      .todo-rx7-kbd {
-        font-size: 10px;
-        font-family: inherit;
-        color: var(--todo-rx7-text-muted);
-        background: var(--todo-rx7-bg);
-        border: 1px solid var(--todo-rx7-border);
-        border-radius: 4px;
-        padding: 1px 5px;
-        line-height: 1.6;
-        font-weight: 500;
-      }
-
-      @media (max-width: 480px) {
-        .todo-rx7-app-container {
-          padding: 20px 16px;
-        }
-
-        .todo-rx7-input-row {
-          flex-direction: column;
-        }
-
-        .todo-rx7-add-btn {
-          justify-content: center;
-        }
-
-        .todo-rx7-delete-btn {
-          opacity: 1;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="todo-rx7-bg-orbs"></div>
-    <div id="todo-rx7-root"></div>
-
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <script type="text/babel" data-type="module">
-      const { useState, useEffect, useRef } = React;
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect, useRef } = React;
 
     const STORAGE_KEY = 'todo-rx7-items-v2';
 
@@ -518,15 +461,6 @@
           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
           <path d="M10 11v6" />
           <path d="M14 11v6" />
-        </svg>
-      );
-    }
-
-    function LinearLogoIcon() {
-      return (
-        <svg width="16" height="16" viewBox="0 0 100 100" fill="none">
-          <path d="M1.22 61.535a48.835 48.835 0 0 1-1.2-7.975L39.56 93.1a48.682 48.682 0 0 1-7.975-1.2L1.22 61.535Z" fill="#fff"/>
-          <path d="M.025 51.095a50.26 50.26 0 0 1 .476-6.87L45.775 89.5a50.26 50.26 0 0 1-6.87.476L.025 51.095ZM2.096 41.2a49.498 49.498 0 0 1 1.695-6.04L53.84 85.21a49.498 49.498 0 0 1-6.04 1.695L2.097 41.2ZM5.854 32.466a49.337 49.337 0 0 1 2.8-5.261L60.795 81.346a49.337 49.337 0 0 1-5.261 2.8L5.854 32.466ZM11.542 24.6a49.47 49.47 0 0 1 3.758-4.558L66.958 71.7a49.47 49.47 0 0 1-4.558 3.758L11.542 24.6ZM19.2 18.2a49.235 49.235 0 0 1 5.003-3.933l56.53 56.53a49.236 49.236 0 0 1-3.932 5.003L19.2 18.2ZM28.52 12.028A49.158 49.158 0 0 1 49.06.475l40.465 40.465a49.158 49.158 0 0 1-11.553 20.54L28.52 12.028ZM58.91 1.633a49.042 49.042 0 0 1 7.26 1.891L15.524 58.17a49.042 49.042 0 0 1-1.89-7.26L58.91 1.633ZM70.146 5.592a49.24 49.24 0 0 1 5.732 3.37L18.962 75.878a49.24 49.24 0 0 1-3.37-5.732L70.146 5.592ZM79.09 11.762a49.544 49.544 0 0 1 4.1 4.268l-57.2 57.2a49.544 49.544 0 0 1-4.268-4.1l57.368-57.368ZM86.028 19.2a49.235 49.235 0 0 1 2.93 4.345l-52.3 52.3a49.235 49.235 0 0 1-4.345-2.93L86.028 19.2ZM91.292 27.4a49.35 49.35 0 0 1 1.89 4.42L49.82 75.182a49.35 49.35 0 0 1-4.42-1.89L91.292 27.4ZM95.04 35.7a49.5 49.5 0 0 1 1.04 4.285L47.985 83.08A49.5 49.5 0 0 1 43.7 82.04L95.04 35.7ZM97.356 44.04c.306 1.63.5 3.292.596 4.975l-38.967 38.967a50.203 50.203 0 0 1-4.975-.596L97.356 44.04ZM98.576 53.7a48.835 48.835 0 0 1-.514 7.375L90.925 53.94a49.75 49.75 0 0 0 .28-4.875L98.576 53.7Z" fill="#fff"/>
         </svg>
       );
     }
@@ -581,15 +515,9 @@
       return (
         <div className="todo-rx7-app-container">
           <div className="todo-rx7-header">
-            <span className="todo-rx7-header-icon"><LinearLogoIcon /></span>
-            <div className="todo-rx7-header-text-wrap">
-              <h1>My Tasks</h1>
-              <p>Stay organized, stay productive</p>
-            </div>
-            <div className="todo-rx7-kbd-hint">
-              <span className="todo-rx7-kbd">⌘</span>
-              <span className="todo-rx7-kbd">K</span>
-            </div>
+            <span className="todo-rx7-header-icon">✨</span>
+            <h1>My Tasks</h1>
+            <p>Stay organized, stay productive</p>
           </div>
 
           {totalCount > 0 && (
@@ -606,13 +534,13 @@
               ref={inputRef}
               className="todo-rx7-input-field"
               type="text"
-              placeholder="Create a new issue..."
+              placeholder="What needs to be done?"
               value={inputVal}
               onChange={e => setInputVal(e.target.value)}
               onKeyDown={handleKeyDown}
             />
             <button className="todo-rx7-add-btn" onClick={addTodo}>
-              <span>＋</span> Add
+              <span>＋</span> Add Task
             </button>
           </div>
 
@@ -625,14 +553,14 @@
                     className={`todo-rx7-filter-btn ${filter === f ? 'todo-rx7-filter-btn--active' : ''}`}
                     onClick={() => setFilter(f)}
                   >
-                    {f === 'all' ? `All (${totalCount})` : f === 'active' ? `In Progress (${totalCount - doneCount})` : `Done (${doneCount})`}
+                    {f === 'all' ? `All (${totalCount})` : f === 'active' ? `Active (${totalCount - doneCount})` : `Done (${doneCount})`}
                   </button>
                 ))}
               </div>
 
               <div className="todo-rx7-stats-bar">
                 <span className="todo-rx7-stats-text">
-                  <span>{doneCount}</span> of <span>{totalCount}</span> completed
+                  <span>{doneCount}</span> of <span>{totalCount}</span> tasks completed
                 </span>
                 {doneCount > 0 && (
                   <button className="todo-rx7-clear-btn" onClick={clearCompleted}>
@@ -646,17 +574,17 @@
           {filtered.length === 0 ? (
             <div className="todo-rx7-empty-state">
               <span className="todo-rx7-empty-state-icon">
-                {filter === 'done' ? '🎯' : filter === 'active' ? '🎉' : '📋'}
+                {filter === 'done' ? '🎯' : filter === 'active' ? '🎉' : '📝'}
               </span>
               <p>
                 {filter === 'done'
-                  ? 'No completed issues yet'
+                  ? 'No completed tasks yet'
                   : filter === 'active'
-                  ? 'All issues completed!'
-                  : 'No issues yet'}
+                  ? 'All tasks completed!'
+                  : 'No tasks yet'}
               </p>
               <p>
-                {filter === 'all' ? 'Create your first issue above to get started' : 'Try changing the filter'}
+                {filter === 'all' ? 'Add your first task above to get started' : 'Try changing the filter'}
               </p>
             </div>
           ) : (
@@ -692,5 +620,5 @@
     const rootEl = document.getElementById('todo-rx7-root');
     ReactDOM.createRoot(rootEl).render(<TodoApp />);
   </script>
-  </body>
+</body>
 </html>
